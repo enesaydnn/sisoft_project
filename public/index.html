@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentLens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Jura', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        #splashScreen {
+            transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .slide-up {
+            transform: translateY(-100%);
+        }
+
+        .splash-spinner {
+            width: 48px; 
+            height: 48px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+        }
+
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+
+        .watermark {
+            position: absolute;
+            font-size: 15vw;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+
+        .dashed-box {
+            border: 1px dashed #94a3b8;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { 
+            width: 4px; 
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track { 
+            background: #f1f5f9; 
+            border-radius: 4px; 
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: #cbd5e1; 
+            border-radius: 4px; 
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-hidden flex items-center justify-center relative selection:bg-black selection:text-white">
+
+    <canvas id="particleCanvas" class="fixed inset-0 z-0 pointer-events-none"></canvas>
+
+    <div id="splashScreen" class="fixed inset-0 bg-[#0a0a0a] z-50 flex flex-col items-center justify-center overflow-hidden">
+        <div class="watermark">TalentLens</div>
+        <div class="z-10 flex flex-col items-center">
+            <div class="splash-spinner mb-8"></div>
+            <h1 class="text-white text-2xl font-bold tracking-widest uppercase mb-2">Sistem Başlatılıyor</h1>
+            <p class="text-gray-500 text-sm tracking-widest">YEREL LLM BAĞLANTISI KURULUYOR...</p>
+        </div>
+    </div>
+
+    <div id="mainContent" class="w-full max-w-4xl px-4 opacity-0 transition-opacity duration-1000 delay-500 flex flex-col items-center py-10 relative z-10">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-[2.75rem] font-bold text-black mb-3">TalentLens</h1>
+            <p class="text-gray-600 text-[1.1rem] font-medium">Akıllı İşe Alım ve Aday Sıralama Sistemi</p>
+        </div>
+
+        <div class="bg-white/90 backdrop-blur-md rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 p-6 md:p-8 w-full max-w-[42rem]">
+            
+            <div class="dashed-box rounded-lg py-12 px-6 mb-4 flex flex-col items-center justify-center hover:bg-gray-50 cursor-pointer transition-all" id="dropZone">
+                <svg class="w-10 h-10 mb-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+
+                <input type="file" id="cvFiles" class="hidden" accept="application/pdf" multiple>
+                
+                <span id="selectFilesText" class="underline underline-offset-4 text-black font-semibold text-lg">PDF Dosyalarını Seç</span>
+                <span class="text-gray-500 text-sm mt-2 font-medium">(Maksimum 10 dosya)</span>
+            </div>
+
+            <div id="fileListContainer" class="w-full mb-6 max-h-[180px] overflow-y-auto custom-scrollbar space-y-2 pr-1"></div>
+
+            <button id="analyzeBtn" disabled class="w-full py-4 rounded-full font-semibold text-lg transition-colors flex justify-center items-center h-[60px] bg-gray-200 text-gray-500 cursor-not-allowed">
+                Yapay Zeka Analizini Başlat
+            </button>
+        </div>
+    </div>
+
+    <div id="resultModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="modalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+            
+            <div class="bg-gray-50 border-b border-gray-100 px-6 py-5 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-black">Yapay Zeka Değerlendirme Sonuçları</h2>
+                    <p class="text-sm text-gray-500 font-medium mt-1" id="processedCountText">Sıralanan aday listesi.</p>
+                </div>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-black transition-colors bg-white rounded-full p-2 border border-gray-200 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white" id="modalCandidatesList">
+            </div>
+            
+            <div class="bg-gray-50 border-t border-gray-100 px-6 py-4">
+                <button onclick="window.location.reload()" class="w-full bg-black text-white py-3 rounded-full font-bold text-sm hover:bg-gray-800 transition-colors">
+                    Yeni Analiz Başlat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.size = Math.random() * 3 + 1.5;
+                this.type = Math.random() > 0.5 ? 'circle' : 'square';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                if (this.type === 'circle') {
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                } else {
+                    ctx.rect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+                }
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.08)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const numParticles = Math.floor((width * height) / 7000); 
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 140) { 
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(15, 23, 42, ${(1 - distance / 140) * 0.08})`; 
+                        ctx.lineWidth = 1; 
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            initCanvas();
+            initParticles();
+        });
+
+        initCanvas();
+        initParticles();
+        animateParticles();
+
+        const splashScreen = document.getElementById('splashScreen');
+        const mainContent = document.getElementById('mainContent');
+        const cvFiles = document.getElementById('cvFiles');
+        const dropZone = document.getElementById('dropZone');
+        const selectFilesText = document.getElementById('selectFilesText');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const fileListContainer = document.getElementById('fileListContainer');
+        
+        const resultModal = document.getElementById('resultModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalCandidatesList = document.getElementById('modalCandidatesList');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const processedCountText = document.getElementById('processedCountText');
+
+        const MAX_FILES = 10;
+        const MAX_FILE_SIZE = 50 * 1024 * 1024;
+        let selectedFiles = [];
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                splashScreen.classList.add('slide-up');
+                mainContent.classList.remove('opacity-0');
+                mainContent.classList.add('opacity-100');
+                document.body.classList.remove('overflow-hidden');
+            }, 2000);
+        });
+
+        dropZone.addEventListener('click', () => {
+            cvFiles.click();
+        });
+
+        cvFiles.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
+            selectedFiles = [...selectedFiles, ...newFiles];
+            cvFiles.value = '';
+            updateUI();
+        });
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateUI();
+        }
+
+        function updateUI() {
+            fileListContainer.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg p-3';
+                fileItem.innerHTML = `
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700 truncate font-semibold">${file.name}</span>
+                    </div>
+                    <button onclick="removeFile(${index})" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                `;
+                fileListContainer.appendChild(fileItem);
+            });
+
+            const names = selectedFiles.map(f => f.name);
+            const duplicateNames = [...new Set(names.filter((item, index) => names.indexOf(item) !== index))];
+            
+            const oversizedFiles = [...new Set(selectedFiles.filter(f => f.size > MAX_FILE_SIZE).map(f => f.name))];
+
+            const baseBtnClass = "w-full py-4 rounded-full font-semibold text-lg transition-colors flex justify-center items-center h-[60px] ";
+            const disabledBtnClass = baseBtnClass + "bg-gray-200 text-gray-500 cursor-not-allowed";
+
+            if (duplicateNames.length > 0) {
+                selectFilesText.textContent = 'Kopya Dosya Tespit Edildi';
+                selectFilesText.classList.remove('underline');
+                analyzeBtn.disabled = true;
+                analyzeBtn.className = disabledBtnClass;
+                const fileNameText = duplicateNames.length === 1 ? duplicateNames[0] : `${duplicateNames.length} dosya`;
+                analyzeBtn.textContent = `Hata: ${fileNameText} 2. kez eklendi! Lütfen listeden silin.`;
+            } else if (oversizedFiles.length > 0) {
+                selectFilesText.textContent = 'Boyut Sınırı Aşıldı';
+                selectFilesText.classList.remove('underline');
+                analyzeBtn.disabled = true;
+                analyzeBtn.className = disabledBtnClass;
+                const fileNameText = oversizedFiles.length === 1 ? oversizedFiles[0] : `${oversizedFiles.length} dosya`;
+                analyzeBtn.textContent = `Hata: ${fileNameText} 50MB'tan büyük! Lütfen listeden silin.`;
+            } else if (selectedFiles.length > MAX_FILES) {
+                selectFilesText.textContent = 'Maksimum Sınır Aşıldı';
+                selectFilesText.classList.remove('underline');
+                analyzeBtn.disabled = true;
+                analyzeBtn.className = disabledBtnClass;
+                analyzeBtn.textContent = `Kapasite Aşıldı (${selectedFiles.length}/${MAX_FILES})`;
+            } else if (selectedFiles.length >= 2) {
+                selectFilesText.textContent = 'Daha Fazla PDF Ekle';
+                selectFilesText.classList.remove('underline');
+                analyzeBtn.disabled = false;
+                analyzeBtn.className = baseBtnClass + "bg-black text-white hover:bg-gray-800";
+                analyzeBtn.textContent = `Yapay Zeka Analizini Başlat (${selectedFiles.length}/${MAX_FILES})`;
+            } else if (selectedFiles.length > 0) {
+                selectFilesText.textContent = `En Az 2 PDF Gerekli (${selectedFiles.length}/2)`;
+                selectFilesText.classList.remove('underline');
+                analyzeBtn.disabled = true;
+                analyzeBtn.className = disabledBtnClass;
+                analyzeBtn.textContent = `Yetersiz Dosya (${selectedFiles.length}/${MAX_FILES})`;
+            } else {
+                selectFilesText.textContent = 'PDF Dosyalarını Seç';
+                selectFilesText.classList.add('underline');
+                analyzeBtn.disabled = true;
+                analyzeBtn.className = disabledBtnClass;
+                analyzeBtn.textContent = 'Yapay Zeka Analizini Başlat';
+            }
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            resultModal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                resultModal.classList.add('hidden');
+                resultModal.classList.remove('flex');
+                updateUI();
+            }, 300);
+        });
+
+        analyzeBtn.addEventListener('click', async () => {
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = `<div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+            
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('cvFiles', file);
+            });
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    const topCandidates = responseData.topCandidates;
+                    const cvCount = responseData.processedCVCount;
+
+                    analyzeBtn.className = "w-full py-4 rounded-full font-semibold text-lg transition-colors flex justify-center items-center h-[60px] bg-black text-white hover:bg-gray-800";
+                    analyzeBtn.innerHTML = 'Analiz Tamamlandı';
+
+                    processedCountText.textContent = `Toplam ${cvCount} CV işlendi. En yüksek puana sahip ilk ${topCandidates.length} aday sıralanmıştır.`;
+                    modalCandidatesList.innerHTML = '';
+
+                    topCandidates.forEach((candidate) => {
+                        const rankColors = ['text-amber-500', 'text-slate-400', 'text-amber-700', 'text-gray-500', 'text-gray-400'];
+                        const color = rankColors[candidate.rank - 1] || 'text-gray-400';
+
+                        modalCandidatesList.innerHTML += `
+                            <div class="flex flex-col p-5 mb-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow relative overflow-hidden bg-white">
+                                <div class="absolute top-0 left-0 w-1 h-full ${candidate.rank === 1 ? 'bg-amber-400' : 'bg-black'}"></div>
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="text-3xl font-black ${color}">#${candidate.rank}</div>
+                                        <div>
+                                            <h3 class="font-bold text-lg text-black">${candidate.candidateName}</h3>
+                                            <p class="text-xs text-gray-500 font-medium">${candidate.pdfFileName}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-black text-black">${candidate.averageScore}</div>
+                                        <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Skor</div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg italic">
+                                    "${candidate.shortEvaluation}"
+                                </p>
+                            </div>
+                        `;
+                    });
+
+                    setTimeout(() => {
+                        resultModal.classList.remove('hidden');
+                        resultModal.classList.add('flex');
+                        
+                        setTimeout(() => {
+                            resultModal.classList.remove('opacity-0');
+                            modalContent.classList.remove('scale-95');
+                        }, 10);
+                    }, 500);
+
+                } else {
+                    const errorData = await response.json();
+                    analyzeBtn.className = "w-full py-4 rounded-full font-semibold text-lg transition-colors flex justify-center items-center h-[60px] bg-gray-200 text-gray-500 cursor-not-allowed";
+                    analyzeBtn.innerHTML = errorData.message || 'Bir Hata Oluştu!';
+                    
+                    setTimeout(() => {
+                        updateUI();
+                    }, 4000);
+                }
+            } catch (error) {
+                analyzeBtn.className = "w-full py-4 rounded-full font-semibold text-lg transition-colors flex justify-center items-center h-[60px] bg-gray-200 text-gray-500 cursor-not-allowed";
+                analyzeBtn.innerHTML = 'Sunucu Bağlantı Hatası!';
+                
+                setTimeout(() => {
+                    updateUI();
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>
