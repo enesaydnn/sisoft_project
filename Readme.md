@@ -47,11 +47,11 @@ Sistem, yapay zeka analizlerini kendi bilgisayarınızda gerçekleştirdiği iç
 
 Tüm kurulumlar tamamlandıktan sonra, uygulamayı başlatmak için şu adımları izleyin:
 
-1. **Paketleri Yükleyin:** Proje klasörünün içerisinde bir terminal/CMD açın ve şu komutu çalıştırın:
+1. **Yapay Zekayı Hazırlayın:** Ollama uygulamasının arka planda açık olduğundan emin olun. Eğer bir bağlantı sorunu yaşarsanız, terminale `ollama run llama3` yazarak modelin etkileşime hazır olmasını sağlayabilirsiniz.
+
+2. **Paketleri Yükleyin:** Proje klasörünün içerisinde bir terminal/CMD açın ve şu komutu çalıştırın:
    npm install
    *(Bu komut, işletim sisteminize uygun kütüphaneleri otomatik olarak indirir.)*
-
-2. **Yapay Zekayı Hazırlayın:** Ollama uygulamasının arka planda açık olduğundan emin olun. Eğer bir bağlantı sorunu yaşarsanız, terminale `ollama run llama3` yazarak modelin etkileşime hazır olmasını sağlayabilirsiniz.
 
 3. **Uygulamayı Başlatın:** Aynı terminal ekranında şu komutu yazarak projeyi çalıştırın:
    node app.js
