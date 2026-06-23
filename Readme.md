@@ -3,9 +3,8 @@ Projemin ismi **TalentLens**, Google Lens’ten ilham alarak bu ismi koydum.
 Herkese merhaba ben Enes,
 Bu proje benim için oldukça öğretici bir süreç oldu. Bu imkânı sağlayan sisoft ekibine teşekkür ederim.
 Projemi JavaScript tabanlı bir mimari ile geliştirdim. UI/UX tasarımında kullanıcı deneyimini sade ve anlaşılır tutmaya çalıştım. 
-----
+
 NOT : Projem lokalde kusursuz çalışıyor ve sıralama algoritmam doğru işliyor. Ancak testlerimde, farklı bilgisayarlardaki donanım farklılıklarının (CPU/GPU mimarisi) yerel LLM çıktılarını ve dolayısıyla aday skorlarını değiştirebildiğini tespit ettim. İnsanların hakkının yenmemesi ve adaletsiz eleme yapılmaması için, bu tarz yapay zeka sistemlerinin yerel makinelerde değil, donanımı sabitlenmiş merkezi bir sunucuda (Cloud) çalışması etik ve teknik bir zorunluluktur.
-----
 
 Kurulum aşamalarıne geçicek olursak bu projeyi javascript mimarisiyle yaptığım için node.js kurarak başlayacağız
 
@@ -48,7 +47,7 @@ Sistem, yapay zeka analizlerini kendi bilgisayarınızda gerçekleştirdiği iç
 
 ## 3. Sistemin Çalıştırılması
 
-NOT : Ollama her zaman açık olmalı. 
+ÖNEMLİ : Ollama her zaman açık olmalı. 
 
 Tüm kurulumlar tamamlandıktan sonra, uygulamayı başlatmak için şu adımları izleyin:
 
