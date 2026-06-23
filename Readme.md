@@ -1,6 +1,6 @@
 Projemin ismi **TalentLens**, Google Lens’ten ilham alarak bu ismi koydum.
 
-Herkese merhaba ben enes,
+Herkese merhaba ben Enes,
 Bu proje benim için oldukça öğretici bir süreç oldu. Bu imkânı sağlayan sisoft ekibine teşekkür ederim.
 Projemi JavaScript tabanlı bir mimari ile geliştirdim. UI/UX tasarımında kullanıcı deneyimini sade ve anlaşılır tutmaya çalıştım.
 
@@ -44,6 +44,8 @@ Sistem, yapay zeka analizlerini kendi bilgisayarınızda gerçekleştirdiği iç
 ---
 
 ## 3. Sistemin Çalıştırılması
+
+NOT : Ollama her zaman açık olmalı. 
 
 Tüm kurulumlar tamamlandıktan sonra, uygulamayı başlatmak için şu adımları izleyin:
 

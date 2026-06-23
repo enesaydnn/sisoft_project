@@ -31,7 +31,9 @@ DEĞERLENDİRME KRİTERLERİ (SADECE CV İSE):
 - Yazılım ile ilgisiz bölümler daha düşük puan alır.
 
 2. foreignLanguages
-- İngilizce seviyesi temel, orta, ileri veya profesyonel düzeye göre puanlanır.
+- Türkçe DIŞINDAKİ tüm yabancı diller (İngilizce, Almanca, İspanyolca vb.) dikkate alınmalıdır.
+- Yabancı dil sayısı ve seviyelerine (temel, orta, ileri, profesyonel) göre değerlendirme yapıp puanla.
+- Ne kadar çok yabancı dil varsa ve seviyeleri ne kadar yüksekse o kadar yüksek puan ver.
 
 3. projects
 - Gerçek yazılım projeleri, GitHub çalışmaları, ekip projeleri ve teknik geliştirmeler yüksek puan alır.
