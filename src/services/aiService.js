@@ -20,27 +20,57 @@ const evaluateCVWithOllama = async (cvText, fileName) => {
     const prompt = `SEN BİR İK UZMANI VE TEKNİK DEĞERLENDİRİCİSİN.
 
 İLK VE EN ÖNEMLİ KURAL (CV KONTROLÜ):
-Aşağıdaki metni dikkatlice oku. Metnin bir özgeçmiş (CV/Resume) olup olmadığını kontrol et. Eğer metin bir ödev talimatı, proje açıklaması veya ders notu ise kesinlikle 'isCV': false döndür.
+Aşağıdaki metni dikkatlice oku. Metnin bir özgeçmiş (CV/Resume) olup olmadığını kontrol et.
 
 Eğer metin GERÇEKTEN BİR CV İSE, "Yazılım Geliştirici" pozisyonu için aşağıdaki kriterlere göre değerlendir.
 
 DEĞERLENDİRME KRİTERLERİ (SADECE CV İSE):
-1. universityAndDepartment: Bilgisayar/Yazılım Mühendisliği, YBS vb. yüksek puan.
-2. foreignLanguages: İngilizce seviyesine göre puanla.
-3. projects: Gerçek yazılım projeleri, GitHub çalışmaları.
-4. internships: Sektördeki stajlar ve iş deneyimleri.
-5. aiCompetency: Yapay zeka, makine öğrenmesi, veri bilimi ilgisi.
+
+1. universityAndDepartment
+- Bilgisayar Mühendisliği, Yazılım Mühendisliği, Yönetim Bilişim Sistemleri vb. bölümler yüksek puan alır.
+- Yazılım ile ilgisiz bölümler daha düşük puan alır.
+
+2. foreignLanguages
+- İngilizce seviyesi temel, orta, ileri veya profesyonel düzeye göre puanlanır.
+
+3. projects
+- Gerçek yazılım projeleri, GitHub çalışmaları, ekip projeleri ve teknik geliştirmeler yüksek puan alır.
+- Proje yoksa düşük puan ver.
+
+4. internships
+- Yazılım sektöründeki stajlar ve iş deneyimleri yüksek puan alır.
+- Deneyim yoksa düşük puan ver.
+
+5. aiCompetency
+- Yapay zeka, makine öğrenmesi, LLM, veri bilimi veya AI araçları kullanımı yüksek puan alır.
+- Hiç yoksa düşük puan ver.
 
 PUANLAMA KURALLARI:
+
 - Her kriter 1 ile 100 arasında olmalıdır.
 - Sadece gerçek CV içeriğine göre puan ver.
+- Bilgi yoksa 20-40 arası puan ver.
+- Çok güçlü ise 80-100 arası puan ver.
+- Tahmin yürütme, CV'de yazan bilgilere dayan.
 
 DİL KURALI (HAYATİ ÖNEM TAŞIR):
-- TÜM CEVAP %100 TÜRKÇE OLMALIDIR.
-- shortEvaluation en fazla 2 cümle olmalı ve 3. şahıs dili ("kullanmıştır", "sahiptir") ile yazılmalıdır.
+
+- SENİN ANA DİLİN TÜRKÇEDİR. Karşına İngilizce CV gelse bile TÜM ANALİZİ SADECE TÜRKÇE YAPACAKSIN.
+- İngilizce yanıt vermen veya İngilizce kelime kullanman KESİNLİKLE YASAKTIR! Tüm alanlar %100 Türkçe olmalıdır.
+- shortEvaluation en fazla 2 cümle olmalıdır.
+- shortEvaluation DÜZGÜN, ANLAMLI VE KURALLI TÜRKÇE CÜMLELERDEN OLUŞMALIDIR. "Aday geliştirmiştir, sahiptir" gibi kelimeleri anlamsızca yan yana dizme! Özne ve yüklem uyumuna dikkat et.
+- DOĞRU KULLANIM MANTIĞI: "Aday, [CV'de Geçen Teknoloji] teknolojilerinde proje geliştirme tecrübesine sahiptir."
+- KESİNLİKLE birinci tekil şahıs ("geliştiriyorum", "yaptım") KULLANMA. Hep 3. şahıs dili kullan ("kullanmıştır", "sahiptir").
+- shortEvaluation içinde adayın kullandığı teknolojiler ve yaptığı çalışmalar özetlenmelidir.
 
 ÇIKTI KURALI:
-SADECE VE SADECE JSON DÖNDÜR. Markdown, kod bloğu veya açıklama KULLANMA.
+
+SADECE JSON DÖNDÜR.
+Açıklama yazma.
+Markdown kullanma.
+Kod bloğu kullanma.
+
+JSON ŞEMASI (HAYATİ KURAL: METİN CV OLSUN VEYA OLMASIN SADECE VE SADECE BU ŞABLONU KULLAN! EĞER CV DEĞİLSE SADECE "isCV": false YAP, EĞER CV İSE "isCV": true YAP VE TÜM BİLGİLERİ DOLDUR):
 
 {
   "isCV": true,
@@ -52,7 +82,7 @@ SADECE VE SADECE JSON DÖNDÜR. Markdown, kod bloğu veya açıklama KULLANMA.
     "internships": 0,
     "aiCompetency": 0
   },
-  "shortEvaluation": "[Adayın teknolojilerini anlatan 2 cümlelik profesyonel Türkçe özet]"
+  "shortEvaluation": "[Adayın teknolojilerini ve projelerini anlatan 2 cümlelik profesyonel Türkçe özet]"
 }
 
 METİN:
